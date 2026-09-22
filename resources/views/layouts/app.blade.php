@@ -18,6 +18,12 @@
         a { color:var(--blue); text-decoration:none } button,input,select,textarea { font:inherit }
         .app-shell { min-height:100vh; display:flex }
         .app-sidebar { position:fixed; z-index:20; inset:0 auto 0 0; width:280px; color:#495057; background:#fff; box-shadow:3px 0 12px #00000012 }
+        .app-sidebar.collapsed { width:76px }
+        .app-sidebar.collapsed .brand { justify-content:center; padding:0 }
+        .app-sidebar.collapsed .brand > span:last-child,.app-sidebar.collapsed .sidebar-caption,.app-sidebar.collapsed .sidebar-nav a { font-size:0 }
+        .app-sidebar.collapsed .sidebar-nav a { justify-content:center; padding:12px 0 }
+        .app-sidebar.collapsed .sidebar-nav a .sidebar-icon { width:24px; font-size:17px }
+        .app-sidebar.collapsed + .app-main { width:calc(100% - 76px); margin-left:76px }
         .brand { height:68px; display:flex; align-items:center; gap:11px; padding:0 25px; background:#fff; color:#495057; font-size:19px; font-weight:700; letter-spacing:.3px }
         .brand-mark { display:grid; place-items:center; width:30px; height:30px; border-radius:7px; color:#fff; background:var(--blue); font-size:15px }
         .sidebar-caption { padding:26px 25px 9px; color:#adb5bd; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase }
@@ -28,6 +34,7 @@
         .sidebar-icon ion-icon { width:18px; height:18px }
         .sidebar-nav a.active .sidebar-icon { color:#3f6ad8 }
         .app-main { width:calc(100% - 280px); min-width:0; margin-left:280px }
+        .sidebar-overlay { display:none }
         .app-header { height:68px; display:flex; align-items:center; justify-content:space-between; padding:0 28px; background:#fff; border-bottom:1px solid var(--line); box-shadow:0 2px 5px #00000008 }
         .app-header-left { display:flex; align-items:center; gap:25px }
         .search-box { display:flex; align-items:center; width:260px; border:1px solid #e9ecef; border-radius:20px; background:#f8f9fa }
@@ -42,6 +49,7 @@
         .profile { display:flex; align-items:center; gap:9px; color:var(--ink); font-weight:400 }
         .avatar { display:grid; place-items:center; width:34px; height:34px; border-radius:50%; color:#fff; background:var(--blue); font-size:12px }
         .page-content { max-width:1440px; margin:0 auto; padding:28px }
+        .app-footer { padding:18px 28px 24px; color:#98a0a8; font-size:12px; text-align:center }
         .page-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:24px }
         .page-heading h1 { margin:0 0 5px; color:#495057; font-size:23px; font-weight:400 }
         .page-heading p { margin:0; color:var(--muted) }
@@ -169,7 +177,7 @@
         .two { display:grid; grid-template-columns:1fr 1fr; gap:22px }
         .pagination { display:flex; gap:5px; padding:16px 20px; list-style:none }
         .pagination li a,.pagination li span { display:block; padding:6px 10px; border:1px solid var(--line); color:var(--blue) }
-        @media (max-width:900px) { .app-sidebar { transform:translateX(-100%); transition:transform .2s } .app-sidebar.open { transform:translateX(0) } .app-main { width:100%; margin-left:0 } .grid { grid-template-columns:repeat(2,minmax(0,1fr)) } }
+        @media (max-width:900px) { .app-sidebar,.app-sidebar.collapsed { width:280px; transform:translateX(-100%); transition:transform .2s } .app-sidebar.open { transform:translateX(0) } .app-sidebar.collapsed + .app-main,.app-main { width:100%; margin-left:0 } .sidebar-overlay { position:fixed; z-index:19; inset:0; display:block; visibility:hidden; opacity:0; background:#1f293780; transition:opacity .2s,visibility .2s } body.sidebar-open .sidebar-overlay { visibility:visible; opacity:1 } .grid { grid-template-columns:repeat(2,minmax(0,1fr)) } }
         @media (max-width:600px) { .page-content { padding:20px 14px } .page-heading { display:block } .page-heading .btn { margin-top:15px } .grid,.two,.form-grid { grid-template-columns:1fr } .form-group.full { grid-column:auto } .form-card .card-header,.form-card .card-body { padding:18px } .form-actions { justify-content:stretch; flex-direction:column-reverse } .form-actions .btn { width:100%; justify-content:center } .app-header { padding:0 16px } .header-actions { gap:12px } .profile span { display:none } }
     </style>
 </head>
@@ -193,9 +201,10 @@
             <li><a href="#"><span class="sidebar-icon"><ion-icon name="settings-outline"></ion-icon></span>Pengaturan</a></li>
         </ul>
     </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
     <section class="app-main">
         <header class="app-header">
-            <div class="app-header-left"><button class="header-toggle" type="button" onclick="document.getElementById('sidebar').classList.toggle('open')" aria-label="Buka menu"><ion-icon name="menu-outline"></ion-icon></button><label class="search-box"><input type="search" placeholder="Type to search"><span><ion-icon name="search-outline"></ion-icon></span></label></div>
+            <div class="app-header-left"><button class="header-toggle" id="sidebar-toggle" type="button" aria-label="Tampilkan atau sembunyikan menu"><ion-icon name="menu-outline"></ion-icon></button><label class="search-box"><input type="search" placeholder="Type to search"><span><ion-icon name="search-outline"></ion-icon></span></label></div>
             <div class="header-actions">
                     <span class="notification"><ion-icon name="notifications-outline"></ion-icon><span class="notification-badge">{{ $pendingDispositions ?? 0 }}</span></span>
                 <span class="profile"><span class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span><span>{{ auth()->user()->name }}</span></span>
@@ -207,7 +216,37 @@
             @if($errors->any())<div class="alert" style="border-color:var(--red);color:#8b1e35;background:#fde4ea">{{ $errors->first() }}</div>@endif
             @yield('content')
         </main>
+        <footer class="app-footer">@2026 E-Surat by Technosolusindo</footer>
     </section>
 </div>
+<script>
+    (() => {
+        const sidebar = document.getElementById('sidebar');
+        const toggle = document.getElementById('sidebar-toggle');
+        const overlay = document.getElementById('sidebar-overlay');
+        const mobileBreakpoint = 900;
+
+        function toggleSidebar() {
+            if (window.innerWidth <= mobileBreakpoint) {
+                sidebar.classList.toggle('open');
+                document.body.classList.toggle('sidebar-open');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+
+        function closeMobileSidebar() {
+            if (window.innerWidth <= mobileBreakpoint) {
+                sidebar.classList.remove('open');
+                document.body.classList.remove('sidebar-open');
+            }
+        }
+
+        toggle.addEventListener('click', toggleSidebar);
+        overlay.addEventListener('click', closeMobileSidebar);
+        document.querySelectorAll('.app-sidebar a').forEach((link) => link.addEventListener('click', closeMobileSidebar));
+        window.addEventListener('resize', closeMobileSidebar);
+    })();
+</script>
 </body>
 </html>
