@@ -69,6 +69,43 @@
         .upload-box { display:flex; align-items:center; gap:14px; padding:16px; border:1px dashed #b8c2cc; border-radius:4px; background:#f8f9fa }
         .upload-box ion-icon { flex:0 0 auto; color:var(--blue); font-size:27px }
         .upload-box input { padding:0; border:0; background:transparent }
+        .detail-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:22px }
+        .detail-title { min-width:0 }
+        .detail-title h1 { margin:0 0 7px; color:#495057; font-size:25px; font-weight:400; line-height:1.25 }
+        .detail-subtitle { display:flex; flex-wrap:wrap; align-items:center; gap:8px; color:var(--muted); font-size:13px }
+        .detail-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px }
+        .detail-layout { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr); align-items:start; gap:22px }
+        .detail-stack { display:grid; gap:22px }
+        .detail-card .card-header { min-height:58px }
+        .detail-card .card-body { padding:22px }
+        .detail-card h2 { display:flex; align-items:center; gap:9px; margin:0; color:#495057; font-size:17px; font-weight:500 }
+        .detail-card h2 ion-icon { color:var(--blue); font-size:20px }
+        .letter-body { margin:0; color:#495057; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere }
+        .meta-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:20px 0 0; padding-top:18px; border-top:1px solid var(--line) }
+        .meta-label { display:block; margin-bottom:3px; color:#adb5bd; font-size:11px; text-transform:uppercase }
+        .meta-value { color:#495057; font-size:13px; font-weight:600 }
+        .attachment-list { display:grid; gap:8px; margin-top:20px; padding-top:17px; border-top:1px solid var(--line) }
+        .attachment-item { display:flex; align-items:center; gap:9px; padding:10px 12px; border:1px solid var(--line); border-radius:3px; background:#f8f9fa }
+        .attachment-item ion-icon { color:var(--blue); font-size:18px }
+        .timeline { position:relative; display:grid; gap:18px; margin:0; padding:2px 0 0 18px; list-style:none }
+        .timeline:before { position:absolute; top:5px; bottom:5px; left:5px; width:1px; content:""; background:#dee2e6 }
+        .timeline-item { position:relative }
+        .timeline-item:before { position:absolute; top:4px; left:-17px; width:9px; height:9px; content:""; border:2px solid #fff; border-radius:50%; background:var(--blue); box-shadow:0 0 0 1px var(--blue) }
+        .timeline-action { color:#495057; font-weight:600 }
+        .timeline-description { margin-top:3px; color:var(--muted); font-size:12px; line-height:1.5 }
+        .comment-item,.disposition-item { padding:13px 0; border-bottom:1px solid var(--line) }
+        .comment-item:first-child,.disposition-item:first-child { padding-top:0 }
+        .comment-item:last-child,.disposition-item:last-child { border-bottom:0 }
+        .item-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:5px }
+        .item-author { color:#495057; font-weight:600 }
+        .item-date { color:#adb5bd; font-size:11px }
+        .item-text { margin:0; color:#5b6168; line-height:1.6; white-space:pre-wrap; overflow-wrap:anywhere }
+        .compact-form { padding-top:17px; margin-top:4px; border-top:1px solid var(--line) }
+        .compact-form label { margin-top:0 }
+        .compact-form textarea { min-height:95px }
+        .verify-card { border-top:3px solid var(--blue) }
+        @media (max-width:900px) { .detail-layout { grid-template-columns:1fr } }
+        @media (max-width:600px) { .detail-heading { display:block } .detail-actions { justify-content:flex-start; margin-top:15px } .detail-title h1 { font-size:21px } .detail-card .card-body { padding:18px } .meta-list { grid-template-columns:1fr } }
         .table-wrap { overflow-x:auto }
         table { width:100%; border-collapse:collapse }
         th,td { padding:14px 20px; text-align:left; border-bottom:1px solid #edf0f2 }
