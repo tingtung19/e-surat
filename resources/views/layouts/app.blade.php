@@ -114,8 +114,28 @@
         .select2-container--default .select2-selection--multiple .select2-selection__choice { border:0; border-radius:3px; padding:4px 7px; color:#fff; background:var(--blue) }
         .select2-container--default .select2-results__option--highlighted[aria-selected] { background:var(--blue) }
         .unread-letter { color:#dc3545 !important; font-weight:700 }
-        .dataTables_wrapper { padding:16px 0 0 }
-        table.dataTable thead th { border-bottom:1px solid #e9ecef }
+        .letters-card { overflow:hidden }
+        .letters-table-wrap { overflow-x:auto; padding:0 20px }
+        .letters-card .dt-container { padding:18px 0 0 }
+        .letters-card .dt-layout-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 16px; padding:0 0 }
+        .letters-card .dt-layout-row:last-child { margin:16px 0 0; padding:0 20px 18px }
+        .letters-card .dt-length,.letters-card .dt-search { display:flex; align-items:center; gap:8px; color:var(--muted); font-size:13px }
+        .letters-card .dt-length select,.letters-card .dt-search input { min-height:36px; padding:7px 10px; border:1px solid #ced4da; border-radius:3px; color:var(--ink); background:#fff; outline:0 }
+        .letters-card .dt-search input { width:230px; margin-left:0 }
+        .letters-card .dt-length select:focus,.letters-card .dt-search input:focus { border-color:#86b7fe; box-shadow:0 0 0 .2rem #3f6ad840 }
+        .letters-card table.dataTable { width:100% !important; margin:0 !important; border-collapse:collapse }
+        .letters-card table.dataTable thead th { padding:12px 14px; border-bottom:1px solid var(--line); color:#8a929a; background:#f8f9fa; white-space:nowrap }
+        .letters-card table.dataTable tbody td { padding:14px; vertical-align:middle; border-bottom:1px solid #edf0f2 }
+        .letters-card table.dataTable tbody tr:last-child td { border-bottom:0 }
+        .letters-card table.dataTable tbody tr:hover { background:#f8faff }
+        .letters-card .dt-info { color:var(--muted); font-size:12px }
+        .letters-card .dt-paging { display:flex; justify-content:flex-end }
+        .letters-card .dt-paging nav { display:flex; gap:4px }
+        .letters-card .dt-paging-button { min-width:32px; min-height:32px; padding:6px 9px !important; border:1px solid var(--line) !important; border-radius:3px !important; color:var(--blue) !important; background:#fff !important }
+        .letters-card .dt-paging-button.current,.letters-card .dt-paging-button:hover { color:#fff !important; border-color:var(--blue) !important; background:var(--blue) !important }
+        .letters-card .dt-empty { padding:30px 14px !important; color:var(--muted) }
+        .letters-card .dt-processing { padding:10px 16px; border:1px solid var(--line); border-radius:3px; color:var(--blue); background:#fff; box-shadow:0 2px 8px #00000012 }
+        @media (max-width:700px) { .letters-card .dt-layout-row { align-items:stretch; flex-direction:column; gap:12px } .letters-card .dt-layout-row:last-child { align-items:flex-start } .letters-card .dt-search input { width:100%; flex:1 } .letters-card .dt-search { width:100% } .letters-card .dt-paging { justify-content:flex-start } .letters-table-wrap { padding:0 12px } }
         .verify-card { border-top:3px solid var(--blue) }
         @media (max-width:900px) { .detail-layout { grid-template-columns:1fr } }
         @media (max-width:600px) { .detail-heading { display:block } .detail-actions { justify-content:flex-start; margin-top:15px } .detail-title h1 { font-size:21px } .detail-card .card-body { padding:18px } .meta-list { grid-template-columns:1fr } }

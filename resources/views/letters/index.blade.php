@@ -1,10 +1,12 @@
 @extends('layouts.app')
 @section('content')
 <div style="display:flex;justify-content:space-between;align-items:center"><h1>Daftar Surat</h1><a class="btn" href="{{ route('letters.create') }}">Buat surat</a></div>
-<div class="card">
-    <table id="letters-table" class="display" style="width:100%">
-        <thead><tr><th>Surat</th><th>Jenis</th><th>Status</th><th>Pengirim</th><th>Waktu</th></tr></thead>
-    </table>
+<div class="card letters-card">
+    <div class="letters-table-wrap">
+        <table id="letters-table" class="display" style="width:100%">
+            <thead><tr><th>Surat</th><th>Jenis</th><th>Status</th><th>Pengirim</th><th>Waktu</th></tr></thead>
+        </table>
+    </div>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
