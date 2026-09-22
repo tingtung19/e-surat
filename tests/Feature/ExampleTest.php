@@ -151,6 +151,40 @@ class ExampleTest extends TestCase
             ->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
     }
 
+    public function test_letter_list_orders_by_newest_created_time(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $creator = User::factory()->create(['role' => 'divisi']);
+        $older = Letter::factory()->create([
+            'title' => 'Surat lama',
+            'description' => 'Isi lama',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'status' => 'sent',
+            'verified_at' => now(),
+            'created_at' => now()->subDay(),
+        ]);
+        $newer = Letter::factory()->create([
+            'title' => 'Surat terbaru',
+            'description' => 'Isi terbaru',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'status' => 'sent',
+            'verified_at' => now(),
+            'created_at' => now(),
+        ]);
+
+        $this->actingAs($director)
+            ->getJson(route('letters.index', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 10,
+                'order' => [['column' => 3, 'dir' => 'desc']],
+            ]))
+            ->assertJsonPath('data.0.title', $newer->title)
+            ->assertJsonPath('data.1.title', $older->title);
+    }
+
     public function test_new_disposition_makes_recipient_letter_unread_again(): void
     {
         $director = User::factory()->create(['role' => 'direktur']);
