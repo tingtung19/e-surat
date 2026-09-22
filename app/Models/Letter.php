@@ -59,4 +59,9 @@ class Letter extends Model
     {
         return $this->hasMany(LetterHistory::class)->latest('occurred_at');
     }
+
+    public function reads(): HasMany
+    {
+        return $this->hasMany(LetterRead::class);
+    }
 }

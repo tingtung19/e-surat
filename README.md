@@ -147,6 +147,8 @@ Surat yang dibuat oleh divisi dapat dibatalkan selama belum dibuka oleh penerima
 
 Tembusan bersifat informatif dan tidak dapat dibalas sebagai disposisi atau diteruskan.
 
+Daftar surat menggunakan DataTables server-side sehingga pencarian, pengurutan, dan pagination tetap ringan saat jumlah surat bertambah. Surat yang belum dibaca oleh akun aktif ditampilkan dengan warna merah dan font tebal. Membuka detail menandai surat telah dibaca; disposisi atau tembusan baru akan menandainya belum dibaca lagi untuk penerima tersebut.
+
 ### Data Master Administrasi
 
 Menu data master hanya tersedia untuk role `admin_umum` dan `super_admin`:

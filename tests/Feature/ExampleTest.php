@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Letter;
 use App\Models\LetterCategory;
+use App\Models\LetterRead;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -103,6 +104,55 @@ class ExampleTest extends TestCase
 
         $this->actingAs($director)->get(route('letters.index'))->assertOk()->assertDontSee('Surat belum diverifikasi');
         $this->actingAs($director)->get(route('letters.show', $letter))->assertForbidden();
+    }
+
+    public function test_letter_list_marks_unread_for_user_and_marks_it_read_when_opened(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $creator = User::factory()->create(['role' => 'divisi']);
+        $letter = Letter::factory()->create([
+            'title' => 'Surat baru direktur',
+            'description' => 'Isi surat',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'status' => 'sent',
+            'number' => '002/TEST/2026',
+            'verified_at' => now(),
+        ]);
+
+        $this->actingAs($director)->getJson(route('letters.index', ['draw' => 1, 'start' => 0, 'length' => 10]))
+            ->assertOk()
+            ->assertJsonPath('data.0.unread', true);
+
+        $this->actingAs($director)->get(route('letters.show', $letter))->assertOk();
+        $this->assertDatabaseHas('letter_reads', ['letter_id' => $letter->id, 'user_id' => $director->id]);
+
+        $this->actingAs($director)->getJson(route('letters.index', ['draw' => 2, 'start' => 0, 'length' => 10]))
+            ->assertJsonPath('data.0.unread', false);
+    }
+
+    public function test_new_disposition_makes_recipient_letter_unread_again(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $recipient = User::factory()->create(['role' => 'divisi']);
+        $letter = Letter::factory()->create([
+            'title' => 'Surat disposisi baru',
+            'description' => 'Isi surat',
+            'type' => 'official',
+            'created_by' => $recipient->id,
+            'sender_division_id' => $recipient->id,
+            'status' => 'sent',
+            'verified_at' => now(),
+        ]);
+        LetterRead::create(['letter_id' => $letter->id, 'user_id' => $recipient->id, 'read_at' => now()]);
+
+        $this->actingAs($director)->post(route('letters.dispositions.store', $letter), [
+            'to_user_ids' => [$recipient->id],
+            'note' => 'Mohon ditindaklanjuti.',
+        ])->assertRedirect();
+
+        $this->actingAs($recipient)->getJson(route('letters.index', ['draw' => 1, 'start' => 0, 'length' => 10]))
+            ->assertJsonPath('data.0.unread', true);
     }
 
     public function test_creator_can_edit_and_submit_a_draft(): void

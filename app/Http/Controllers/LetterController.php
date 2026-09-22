@@ -7,8 +7,10 @@ use App\Models\LetterCategory;
 use App\Models\LetterComment;
 use App\Models\LetterDisposition;
 use App\Models\LetterHistory;
+use App\Models\LetterRead;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +18,49 @@ use Illuminate\View\View;
 
 class LetterController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View|JsonResponse
     {
-        return view('letters.index', ['letters' => $this->accessibleLetters()->with(['senderDivision', 'category'])->latest()->paginate(15)]);
+        $query = $this->accessibleLetters()->with('senderDivision');
+
+        if ($request->expectsJson()) {
+            $draw = (int) $request->input('draw', 1);
+            $total = (clone $query)->count();
+            $search = trim((string) $request->input('search.value', ''));
+            if ($search !== '') {
+                $query->where(function (Builder $searchQuery) use ($search): void {
+                    $searchQuery->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('number', 'like', '%'.$search.'%')
+                        ->orWhere('status', 'like', '%'.$search.'%')
+                        ->orWhereHas('senderDivision', fn (Builder $sender) => $sender->where('name', 'like', '%'.$search.'%')->orWhere('division_name', 'like', '%'.$search.'%'));
+                });
+            }
+            $filtered = (clone $query)->count();
+            $columns = ['title', 'type', 'status', 'created_at'];
+            $orderColumn = $columns[(int) $request->input('order.0.column', 3)] ?? 'created_at';
+            $direction = $request->input('order.0.dir') === 'asc' ? 'asc' : 'desc';
+            $letters = $query->orderBy($orderColumn, $direction)
+                ->skip((int) $request->input('start', 0))
+                ->take((int) $request->input('length', 10))
+                ->get();
+
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => $total,
+                'recordsFiltered' => $filtered,
+                'data' => $letters->map(fn (Letter $letter): array => [
+                    'title' => $letter->title,
+                    'number' => $letter->number ?? 'Tanpa nomor',
+                    'type' => ucfirst($letter->type),
+                    'status' => str_replace('_', ' ', ucfirst($letter->status)),
+                    'sender' => $letter->senderDivision?->division_name ?? $letter->senderDivision?->name ?? '-',
+                    'created_at' => $letter->created_at->format('d/m/Y H:i'),
+                    'url' => route('letters.show', $letter),
+                    'unread' => $this->isUnreadForUser($letter),
+                ]),
+            ]);
+        }
+
+        return view('letters.index');
     }
 
     public function create(): View
@@ -69,6 +111,7 @@ class LetterController extends Controller
         $attachments = $request->file('attachments', []);
         $letter = DB::transaction(function () use ($data, $creator, $attachments): Letter {
             $letter = Letter::create($data);
+            LetterRead::create(['letter_id' => $letter->id, 'user_id' => $creator->id, 'read_at' => now()]);
             LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $creator->id, 'action' => 'created', 'description' => 'Surat dibuat dengan status '.$letter->status, 'occurred_at' => now()]);
             foreach ($attachments as $attachment) {
                 $path = $attachment->store('letters');
@@ -122,6 +165,10 @@ class LetterController extends Controller
         $attachments = $request->file('attachments', []);
         DB::transaction(function () use ($data, $attachments, $letter, $request): void {
             $letter->update($data);
+            LetterRead::updateOrCreate(
+                ['letter_id' => $letter->id, 'user_id' => $request->user()->id],
+                ['read_at' => now()],
+            );
             LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $request->user()->id, 'action' => 'updated', 'description' => 'Draft diperbarui dengan status '.$letter->status, 'occurred_at' => now()]);
             foreach ($attachments as $attachment) {
                 $path = $attachment->store('letters');
@@ -139,6 +186,11 @@ class LetterController extends Controller
             $letter->update(['opened_at' => now(), 'status' => $letter->status === 'sent' ? 'opened' : $letter->status]);
             LetterHistory::create(['letter_id' => $letter->id, 'user_id' => auth()->id(), 'action' => 'opened', 'description' => 'Surat dibuka', 'occurred_at' => now()]);
         }
+        LetterRead::updateOrCreate(
+            ['letter_id' => $letter->id, 'user_id' => auth()->id()],
+            ['read_at' => now()],
+        );
+        $letter->dispositions()->where('to_user_id', auth()->id())->where('is_read', false)->update(['is_read' => true]);
 
         return view('letters.show', ['letter' => $letter->load(['creator', 'senderDivision', 'targetDivision', 'category', 'attachments', 'comments.user', 'dispositions.recipient', 'histories.user']), 'divisions' => User::where('role', 'divisi')->where('is_active', true)->orderBy('division_name')->get()]);
     }
@@ -247,15 +299,23 @@ class LetterController extends Controller
         }
 
         return Letter::query()->where(function (Builder $query) use ($user): void {
+            if ($user->isDirector()) {
+                $query->where(function (Builder $verifiedLetters): void {
+                    $verifiedLetters->whereIn('type', ['official', 'external'])->whereNotNull('verified_at');
+                })->orWhereHas('dispositions', fn (Builder $dispositions) => $dispositions->where('to_user_id', $user->id));
+
+                return;
+            }
             $query->where('created_by', $user->id)
                 ->orWhere('sender_division_id', $user->id)
                 ->orWhere('target_division_id', $user->id)
                 ->orWhereHas('dispositions', fn (Builder $dispositions) => $dispositions->where('to_user_id', $user->id));
-            if ($user->isDirector()) {
-                $query->orWhere(function (Builder $verifiedLetters): void {
-                    $verifiedLetters->whereIn('type', ['official', 'external'])->whereNotNull('verified_at');
-                });
-            }
         });
+    }
+
+    private function isUnreadForUser(Letter $letter): bool
+    {
+        return ! LetterRead::where('letter_id', $letter->id)->where('user_id', auth()->id())->exists()
+            || $letter->dispositions()->where('to_user_id', auth()->id())->where('is_read', false)->exists();
     }
 }
