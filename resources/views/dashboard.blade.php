@@ -2,8 +2,8 @@
 @section('content')
 <div class="dashboard-hero"><div><div class="breadcrumb"><a href="{{ route('dashboard') }}">Beranda</a> &nbsp;/&nbsp; Dashboard</div><h1>Selamat datang kembali, {{ auth()->user()->name }}</h1><p>Pantau surat, disposisi, dan tindak lanjut terbaru dari satu tempat.</p></div><a class="btn" href="{{ route('letters.create') }}"><ion-icon name="add-outline"></ion-icon> Buat surat baru</a></div>
 <div class="grid dashboard-metrics">
-    <div class="card metric-card"><span class="metric-icon blue"><ion-icon name="documents-outline"></ion-icon></span><div><div class="metric-label">Total surat saya</div><div class="metric">{{ $counts['total'] }}</div><small class="metric-note">Seluruh akses surat</small></div></div>
-    <div class="card metric-card"><span class="metric-icon orange"><ion-icon name="time-outline"></ion-icon></span><div><div class="metric-label">Menunggu tindakan</div><div class="metric">{{ $counts['waiting'] }}</div><small class="metric-note">Perlu ditindaklanjuti</small></div></div>
+    <div class="card metric-card"><span class="metric-icon blue"><ion-icon name="documents-outline"></ion-icon></span><div><div class="metric-label">Total surat</div><div class="metric">{{ $counts['total'] }}</div><small class="metric-note">Seluruh akses surat</small></div></div>
+    <div class="card metric-card"><span class="metric-icon orange"><ion-icon name="time-outline"></ion-icon></span><div><div class="metric-label">Menunggu</div><div class="metric">{{ $counts['waiting'] }}</div><small class="metric-note">Perlu dicheck</small></div></div>
     <div class="card metric-card"><span class="metric-icon red"><ion-icon name="eye-off-outline"></ion-icon></span><div><div class="metric-label">Belum dibaca</div><div class="metric">{{ $counts['unread'] }}</div><small class="metric-note">Perlu perhatian</small></div></div>
     <div class="card metric-card"><span class="metric-icon green"><ion-icon name="checkmark-done-outline"></ion-icon></span><div><div class="metric-label">Disposisi saya</div><div class="metric">{{ $pendingDispositions }}</div><small class="metric-note">Belum dibalas</small></div></div>
 </div>
