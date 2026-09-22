@@ -24,7 +24,8 @@ class LetterController extends Controller
     public function create(): View
     {
         return view('letters.create', [
-            'divisions' => User::where('role', 'divisi')->where('is_active', true)->get(),
+            'divisions' => User::where('role', 'divisi')->where('is_active', true)->orderBy('division_name')->get(),
+            'defaultDivision' => User::where('role', 'divisi')->where('is_active', true)->where('division_name', 'Divisi Umum')->first(),
             'categories' => LetterCategory::with('children')->whereNull('parent_id')->get(),
         ]);
     }
@@ -46,17 +47,30 @@ class LetterController extends Controller
         if ($data['type'] === 'external' && ! $request->user()->isAdmin()) {
             abort(403);
         }
-        if ($data['type'] === 'internal' && ! $data['target_division_id']) {
+        if ($data['type'] === 'official') {
+            $defaultDivision = User::where('role', 'divisi')
+                ->where('is_active', true)
+                ->where('division_name', 'Divisi Umum')
+                ->first();
+
+            if (! $defaultDivision) {
+                return back()->withErrors(['target_division_id' => 'Divisi Umum belum tersedia. Tambahkan melalui Data Users terlebih dahulu.'])->withInput();
+            }
+
+            $data['target_division_id'] = $defaultDivision->id;
+        }
+        if ($data['type'] === 'internal' && (! $data['target_division_id'] || ! User::where('role', 'divisi')->where('is_active', true)->whereKey($data['target_division_id'])->exists())) {
             return back()->withErrors(['target_division_id' => 'Divisi tujuan wajib dipilih untuk surat internal.'])->withInput();
         }
         $creator = $request->user();
         $data['created_by'] = $creator->id;
         $data['sender_division_id'] = $creator->id;
         $data['status'] = $request->boolean('save_draft') ? 'draft' : ($data['type'] === 'internal' ? 'sent' : 'waiting_verification');
-        $letter = DB::transaction(function () use ($data, $creator): Letter {
+        $attachments = $request->file('attachments', []);
+        $letter = DB::transaction(function () use ($data, $creator, $attachments): Letter {
             $letter = Letter::create($data);
             LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $creator->id, 'action' => 'created', 'description' => 'Surat dibuat dengan status '.$letter->status, 'occurred_at' => now()]);
-            foreach ($request->file('attachments', []) as $attachment) {
+            foreach ($attachments as $attachment) {
                 $path = $attachment->store('letters');
                 $letter->attachments()->create(['file_name' => $attachment->getClientOriginalName(), 'file_path' => $path, 'file_size' => $attachment->getSize(), 'mime_type' => $attachment->getMimeType()]);
             }
