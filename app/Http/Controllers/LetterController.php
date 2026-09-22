@@ -252,7 +252,9 @@ class LetterController extends Controller
                 ->orWhere('target_division_id', $user->id)
                 ->orWhereHas('dispositions', fn (Builder $dispositions) => $dispositions->where('to_user_id', $user->id));
             if ($user->isDirector()) {
-                $query->orWhereIn('type', ['official', 'external']);
+                $query->orWhere(function (Builder $verifiedLetters): void {
+                    $verifiedLetters->whereIn('type', ['official', 'external'])->whereNotNull('verified_at');
+                });
             }
         });
     }

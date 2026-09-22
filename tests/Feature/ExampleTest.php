@@ -77,12 +77,32 @@ class ExampleTest extends TestCase
             'type' => 'official',
             'created_by' => $creator->id,
             'sender_division_id' => $creator->id,
+            'status' => 'sent',
+            'number' => '001/TEST/2026',
+            'verified_at' => now(),
         ]);
 
         $this->actingAs($director)
             ->get(route('letters.show', $letter))
             ->assertOk()
             ->assertSee($creator->email);
+    }
+
+    public function test_director_cannot_see_unverified_division_letter(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $creator = User::factory()->create(['role' => 'divisi', 'is_active' => true]);
+        $letter = Letter::factory()->create([
+            'title' => 'Surat belum diverifikasi',
+            'description' => 'Isi surat',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'sender_division_id' => $creator->id,
+            'status' => 'waiting_verification',
+        ]);
+
+        $this->actingAs($director)->get(route('letters.index'))->assertOk()->assertDontSee('Surat belum diverifikasi');
+        $this->actingAs($director)->get(route('letters.show', $letter))->assertForbidden();
     }
 
     public function test_creator_can_edit_and_submit_a_draft(): void
