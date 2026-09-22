@@ -63,6 +63,28 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('letters', ['id' => $letter->id, 'status' => 'waiting_reply']);
     }
 
+    public function test_director_can_see_the_letter_creator_as_a_disposition_recipient(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $creator = User::factory()->create([
+            'role' => 'divisi',
+            'division_name' => 'Divisi Pembuat',
+            'is_active' => true,
+        ]);
+        $letter = Letter::factory()->create([
+            'title' => 'Surat pembuat',
+            'description' => 'Isi surat pembuat',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'sender_division_id' => $creator->id,
+        ]);
+
+        $this->actingAs($director)
+            ->get(route('letters.show', $letter))
+            ->assertOk()
+            ->assertSee($creator->email);
+    }
+
     public function test_director_can_send_cc_to_multiple_divisions_and_reject_inactive_users(): void
     {
         $director = User::factory()->create(['role' => 'direktur']);

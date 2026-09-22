@@ -89,7 +89,7 @@ class LetterController extends Controller
             LetterHistory::create(['letter_id' => $letter->id, 'user_id' => auth()->id(), 'action' => 'opened', 'description' => 'Surat dibuka', 'occurred_at' => now()]);
         }
 
-        return view('letters.show', ['letter' => $letter->load(['creator', 'senderDivision', 'targetDivision', 'category', 'attachments', 'comments.user', 'dispositions.recipient', 'histories.user']), 'divisions' => User::where('role', 'divisi')->where('id', '!=', $letter->sender_division_id)->get()]);
+        return view('letters.show', ['letter' => $letter->load(['creator', 'senderDivision', 'targetDivision', 'category', 'attachments', 'comments.user', 'dispositions.recipient', 'histories.user']), 'divisions' => User::where('role', 'divisi')->where('is_active', true)->orderBy('division_name')->get()]);
     }
 
     public function comment(Request $request, Letter $letter): RedirectResponse
