@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Masuk — E-Surat</title>
+<style>body{margin:0;display:grid;place-items:center;min-height:100vh;background:#f1f4f6;font:14px system-ui;color:#3f4254}.login{width:min(400px,calc(100% - 32px));padding:32px;background:#fff;border-radius:5px;box-shadow:0 8px 30px #0001}h1{margin:0 0 6px;font-size:24px}p{color:#6c757d}label{display:block;margin:18px 0 7px;font-weight:600}input{width:100%;box-sizing:border-box;padding:11px;border:1px solid #ced4da;border-radius:3px}button{width:100%;margin-top:22px;padding:11px;border:0;border-radius:3px;background:#3f6ad8;color:#fff;font-weight:600}.error{padding:10px;background:#fde4ea;color:#8b1e35;border-radius:3px}</style></head>
+<body><div class="login"><h1>E-SURAT</h1><p>Masuk ke sistem persuratan digital.</p>@if($errors->any())<div class="error">{{ $errors->first() }}</div>@endif<form method="post" action="{{ route('login.store') }}">@csrf<label>Email</label><input type="email" name="email" value="{{ old('email') }}" required autofocus><label>Password</label><input type="password" name="password" required><button>Masuk</button></form></div></body>
+</html>

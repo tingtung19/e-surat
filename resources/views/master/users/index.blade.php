@@ -1,0 +1,7 @@
+@extends('layouts.app')
+@section('content')
+<div class="page-heading"><div><h1>Data Users &amp; Divisi</h1><p>Kelola akun, role, status aktif, dan password pengguna.</p><div class="breadcrumb"><a href="{{ route('dashboard') }}">Beranda</a> &nbsp;/&nbsp; Data Users</div></div><a class="btn" href="{{ route('master.users.create') }}"><ion-icon name="add-outline"></ion-icon> Tambah user</a></div>
+<div class="card content-card"><div class="card-header"><h2>Daftar pengguna</h2><span class="muted">{{ $users->total() }} akun</span></div><div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Divisi</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead><tbody>
+@forelse($users as $user)<tr><td><strong>{{ $user->name }}</strong></td><td>{{ $user->email }}</td><td>{{ $user->division_name ?? '-' }}</td><td><span class="badge badge-blue">{{ str_replace('_',' ', $user->role) }}</span></td><td><span class="badge {{ $user->is_active ? 'badge-green' : 'badge-red' }}">{{ $user->is_active ? 'Aktif' : 'Nonaktif' }}</span></td><td><a class="btn secondary" href="{{ route('master.users.edit',$user) }}">Edit</a> <form style="display:inline" method="post" action="{{ route('master.users.destroy',$user) }}" onsubmit="return confirm('Hapus user ini?')">@csrf @method('DELETE')<button class="btn secondary" type="submit">Hapus</button></form></td></tr>@empty<tr><td colspan="6">Belum ada user.</td></tr>@endforelse
+</tbody></table></div>{{ $users->links() }}</div>
+@endsection

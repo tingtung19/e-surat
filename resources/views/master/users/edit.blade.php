@@ -1,0 +1,5 @@
+@extends('layouts.app')
+@section('content')
+<div class="page-heading"><div><h1>Edit User</h1><p>Perbarui informasi dan status akun.</p></div></div>
+<div class="card form-card"><div class="card-header"><h2><ion-icon name="create-outline"></ion-icon> Informasi akun</h2></div><div class="card-body"><form method="post" action="{{ route('master.users.update',$user) }}">@csrf @method('PUT') @include('master.users.form',['user'=>$user])<div class="form-actions"><a class="btn secondary" href="{{ route('master.users.index') }}">Batal</a><button class="btn">Simpan perubahan</button></div></form><hr><h3>Reset Password</h3><form method="post" action="{{ route('master.users.reset-password',$user) }}">@csrf<div class="form-grid"><div class="form-group"><label>Password baru</label><input type="password" name="password" required minlength="8"></div><div class="form-group"><label>Konfirmasi password</label><input type="password" name="password_confirmation" required minlength="8"></div></div><button class="btn secondary">Reset password</button></form></div></div>
+@endsection
