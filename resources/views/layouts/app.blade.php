@@ -4,8 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? 'E-Surat' }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
     <script type="module" src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@8.0.13/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         :root { --blue:#3f6ad8; --navy:#1f2937; --ink:#495057; --muted:#6c757d; --line:#dee2e6; --canvas:#f1f4f6; --green:#3ac47d; --orange:#f7b924; --red:#d92550; --purple:#794c8a }
         * { box-sizing:border-box }
@@ -103,6 +106,11 @@
         .compact-form { padding-top:17px; margin-top:4px; border-top:1px solid var(--line) }
         .compact-form label { margin-top:0 }
         .compact-form textarea { min-height:95px }
+        .select2-container { width:100% !important; font-size:13px }
+        .select2-container--default .select2-selection--multiple { min-height:42px; padding:4px 7px; border:1px solid #ced4da; border-radius:3px }
+        .select2-container--default.select2-container--focus .select2-selection--multiple { border-color:#86b7fe; box-shadow:0 0 0 .2rem #3f6ad840 }
+        .select2-container--default .select2-selection--multiple .select2-selection__choice { border:0; border-radius:3px; padding:4px 7px; color:#fff; background:var(--blue) }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] { background:var(--blue) }
         .verify-card { border-top:3px solid var(--blue) }
         @media (max-width:900px) { .detail-layout { grid-template-columns:1fr } }
         @media (max-width:600px) { .detail-heading { display:block } .detail-actions { justify-content:flex-start; margin-top:15px } .detail-title h1 { font-size:21px } .detail-card .card-body { padding:18px } .meta-list { grid-template-columns:1fr } }

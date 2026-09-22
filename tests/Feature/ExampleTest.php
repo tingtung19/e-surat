@@ -47,4 +47,40 @@ class ExampleTest extends TestCase
             'category_id' => LetterCategory::factory()->create(['name' => 'Uji'])->id,
         ])->assertForbidden();
     }
+
+    public function test_director_can_send_disposition_to_multiple_divisions(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $recipients = User::factory()->count(2)->create(['role' => 'divisi', 'is_active' => true]);
+        $letter = Letter::factory()->create(['title' => 'Surat disposisi', 'description' => 'Isi surat disposisi', 'type' => 'official', 'created_by' => $director->id]);
+
+        $this->actingAs($director)->post(route('letters.dispositions.store', $letter), [
+            'to_user_ids' => $recipients->pluck('id')->all(),
+            'note' => 'Mohon ditindaklanjuti.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('letter_dispositions', 2);
+        $this->assertDatabaseHas('letters', ['id' => $letter->id, 'status' => 'waiting_reply']);
+    }
+
+    public function test_director_can_send_cc_to_multiple_divisions_and_reject_inactive_users(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $recipients = User::factory()->count(2)->create(['role' => 'divisi', 'is_active' => true]);
+        $inactive = User::factory()->create(['role' => 'divisi', 'is_active' => false]);
+        $letter = Letter::factory()->create(['title' => 'Surat tembusan', 'description' => 'Isi surat tembusan', 'type' => 'official', 'created_by' => $director->id]);
+
+        $this->actingAs($director)->post(route('letters.cc.store', $letter), [
+            'cc_user_ids' => $recipients->pluck('id')->all(),
+            'note' => 'Untuk informasi.',
+        ])->assertRedirect();
+
+        $this->assertDatabaseCount('letter_dispositions', 2);
+        $this->assertDatabaseHas('letter_dispositions', ['to_user_id' => $recipients->first()->id, 'type' => 'cc', 'is_replied' => true]);
+
+        $this->actingAs($director)->post(route('letters.cc.store', $letter), [
+            'cc_user_ids' => [$inactive->id],
+        ])->assertStatus(422);
+        $this->assertDatabaseCount('letter_dispositions', 2);
+    }
 }

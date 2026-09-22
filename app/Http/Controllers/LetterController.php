@@ -103,23 +103,43 @@ class LetterController extends Controller
 
     public function dispose(Request $request, Letter $letter): RedirectResponse
     {
-        $data = $request->validate(['to_user_id' => ['required', 'exists:users,id'], 'note' => ['required', 'string', 'max:5000']]);
         abort_unless(auth()->user()->isDirector(), 403);
-        LetterDisposition::create(['letter_id' => $letter->id, 'from_user_id' => auth()->id(), 'to_user_id' => $data['to_user_id'], 'type' => 'disposition', 'note' => $data['note'], 'disposed_at' => now()]);
-        $letter->update(['status' => 'waiting_reply']);
-        LetterHistory::create(['letter_id' => $letter->id, 'user_id' => auth()->id(), 'action' => 'disposed', 'description' => $data['note'], 'occurred_at' => now()]);
+        $data = $request->validate([
+            'to_user_ids' => ['required', 'array', 'min:1'],
+            'to_user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
+            'note' => ['required', 'string', 'max:5000'],
+        ]);
+        $recipients = User::whereIn('id', $data['to_user_ids'])->where('role', 'divisi')->where('is_active', true)->get();
+        abort_if($recipients->count() !== count($data['to_user_ids']), 422, 'Semua penerima disposisi harus merupakan divisi aktif.');
+        DB::transaction(function () use ($data, $letter, $recipients): void {
+            foreach ($recipients as $recipient) {
+                LetterDisposition::create(['letter_id' => $letter->id, 'from_user_id' => auth()->id(), 'to_user_id' => $recipient->id, 'type' => 'disposition', 'note' => $data['note'], 'disposed_at' => now()]);
+                LetterHistory::create(['letter_id' => $letter->id, 'user_id' => auth()->id(), 'action' => 'disposed', 'description' => 'Disposisi ke '.$recipient->email.': '.$data['note'], 'occurred_at' => now()]);
+            }
+            $letter->update(['status' => 'waiting_reply']);
+        });
 
-        return back()->with('success', 'Disposisi berhasil dikirim.');
+        return back()->with('success', 'Disposisi berhasil dikirim ke '.$recipients->count().' divisi.');
     }
 
     public function cc(Request $request, Letter $letter): RedirectResponse
     {
         abort_unless($request->user()->isDirector(), 403);
-        $data = $request->validate(['to_user_id' => ['required', 'exists:users,id'], 'note' => ['nullable', 'string', 'max:5000']]);
-        LetterDisposition::create(['letter_id' => $letter->id, 'from_user_id' => $request->user()->id, 'to_user_id' => $data['to_user_id'], 'type' => 'cc', 'note' => $data['note'], 'disposed_at' => now(), 'is_replied' => true]);
-        LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $request->user()->id, 'action' => 'cc_added', 'description' => $data['note'] ?? 'Tembusan ditambahkan.', 'occurred_at' => now()]);
+        $data = $request->validate([
+            'cc_user_ids' => ['required', 'array', 'min:1'],
+            'cc_user_ids.*' => ['integer', 'distinct', 'exists:users,id'],
+            'note' => ['nullable', 'string', 'max:5000'],
+        ]);
+        $recipients = User::whereIn('id', $data['cc_user_ids'])->where('role', 'divisi')->where('is_active', true)->get();
+        abort_if($recipients->count() !== count($data['cc_user_ids']), 422, 'Semua penerima tembusan harus merupakan divisi aktif.');
+        DB::transaction(function () use ($data, $letter, $recipients, $request): void {
+            foreach ($recipients as $recipient) {
+                LetterDisposition::create(['letter_id' => $letter->id, 'from_user_id' => $request->user()->id, 'to_user_id' => $recipient->id, 'type' => 'cc', 'note' => $data['note'], 'disposed_at' => now(), 'is_replied' => true]);
+                LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $request->user()->id, 'action' => 'cc_added', 'description' => 'Tembusan ke '.$recipient->email.': '.($data['note'] ?? 'Tembusan ditambahkan.'), 'occurred_at' => now()]);
+            }
+        });
 
-        return back()->with('success', 'Tembusan berhasil ditambahkan.');
+        return back()->with('success', 'Tembusan berhasil dikirim ke '.$recipients->count().' divisi.');
     }
 
     public function close(Request $request, Letter $letter): RedirectResponse

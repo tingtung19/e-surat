@@ -140,9 +140,10 @@ Surat yang dibuat oleh divisi dapat dibatalkan selama belum dibuka oleh penerima
 1. Login menggunakan `director@esurat.local`.
 2. Buka surat resmi atau surat eksternal.
 3. Berikan komentar atau tanggapan.
-4. Untuk tindak lanjut, pilih divisi dan isi instruksi disposisi.
-5. Gunakan **Tambah tembusan** untuk pihak yang hanya perlu menerima informasi.
-6. Tutup surat setelah seluruh disposisi wajib-balas telah dijawab.
+4. Untuk tindak lanjut, gunakan kolom **Kirim disposisi**. Kolom ini mendukung pencarian Select2 berdasarkan nama divisi dan email serta pemilihan beberapa penerima sekaligus.
+5. Gunakan **Tambah tembusan** untuk memilih satu atau beberapa divisi yang hanya perlu menerima informasi.
+6. Isi instruksi atau catatan, lalu kirim formulir. Setiap penerima disimpan sebagai baris disposisi/tembusan terpisah agar balasan dan histori tercatat per penerima.
+7. Tutup surat setelah seluruh disposisi wajib-balas telah dijawab.
 
 Tembusan bersifat informatif dan tidak dapat dibalas sebagai disposisi atau diteruskan.
 

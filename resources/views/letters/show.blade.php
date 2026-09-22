@@ -86,12 +86,26 @@
                     @if($disposition->to_user_id === auth()->id() && $disposition->type === 'disposition' && ! $disposition->is_replied)<form class="compact-form" method="post" enctype="multipart/form-data" action="{{ route('letters.dispositions.reply', [$letter, $disposition]) }}">@csrf<label>Jawaban disposisi</label><textarea name="body" placeholder="Tulis jawaban disposisi..." required></textarea><input type="file" name="attachments[]" multiple style="margin-top:10px"><button class="btn" style="margin-top:10px" type="submit"><ion-icon name="send-outline"></ion-icon> Kirim jawaban</button></form>@endif</div>
                 @empty <p class="muted">Belum ada disposisi atau tembusan.</p>@endforelse
                 @if(auth()->user()->isDirector())
-                    <form class="compact-form" method="post" action="{{ route('letters.dispositions.store', $letter) }}">@csrf<label for="to_user_id">Kirim disposisi</label><select id="to_user_id" name="to_user_id" required><option value="">Pilih divisi tujuan</option>@foreach($divisions as $division)<option value="{{ $division->id }}">{{ $division->division_name ?? $division->name }}</option>@endforeach</select><textarea name="note" placeholder="Instruksi disposisi..." required style="margin-top:10px"></textarea><button class="btn" style="margin-top:10px" type="submit"><ion-icon name="arrow-redo-outline"></ion-icon> Disposisikan</button></form>
-                    <form class="compact-form" method="post" action="{{ route('letters.cc.store', $letter) }}">@csrf<label for="cc_user_id">Tambah tembusan</label><select id="cc_user_id" name="to_user_id" required><option value="">Pilih penerima tembusan</option>@foreach($divisions as $division)<option value="{{ $division->id }}">{{ $division->division_name ?? $division->name }}</option>@endforeach</select><input name="note" placeholder="Catatan informasi (opsional)" style="margin-top:10px"><button class="btn secondary" style="margin-top:10px" type="submit"><ion-icon name="copy-outline"></ion-icon> Tambah tembusan</button></form>
+                    <form class="compact-form" method="post" action="{{ route('letters.dispositions.store', $letter) }}">@csrf<label for="to_user_ids">Kirim disposisi <span class="form-help">Pilih satu atau beberapa email divisi penerima.</span></label><select class="multi-select" id="to_user_ids" name="to_user_ids[]" multiple required data-placeholder="Cari email atau nama divisi">@foreach($divisions as $division)<option value="{{ $division->id }}">{{ $division->division_name ?? $division->name }} — {{ $division->email }}</option>@endforeach</select><textarea name="note" placeholder="Instruksi disposisi..." required style="margin-top:10px"></textarea><button class="btn" style="margin-top:10px" type="submit"><ion-icon name="arrow-redo-outline"></ion-icon> Disposisikan</button></form>
+                    <form class="compact-form" method="post" action="{{ route('letters.cc.store', $letter) }}">@csrf<label for="cc_user_ids">Tambah tembusan <span class="form-help">Pilih satu atau beberapa email divisi untuk informasi.</span></label><select class="multi-select" id="cc_user_ids" name="cc_user_ids[]" multiple required data-placeholder="Cari email atau nama divisi">@foreach($divisions as $division)<option value="{{ $division->id }}">{{ $division->division_name ?? $division->name }} — {{ $division->email }}</option>@endforeach</select><input name="note" placeholder="Catatan informasi (opsional)" style="margin-top:10px"><button class="btn secondary" style="margin-top:10px" type="submit"><ion-icon name="copy-outline"></ion-icon> Tambah tembusan</button></form>
                 @endif
                 @if((auth()->user()->isDirector() || auth()->user()->isAdmin()) && $letter->status !== 'closed')<form class="compact-form" method="post" action="{{ route('letters.close', $letter) }}">@csrf<button class="btn secondary" type="submit"><ion-icon name="archive-outline"></ion-icon> Tutup surat</button></form>@endif
             </div>
         </section>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (window.jQuery && jQuery.fn.select2) {
+            jQuery('.multi-select').select2({
+                width: '100%',
+                closeOnSelect: false,
+                allowClear: true,
+                placeholder: function () {
+                    return jQuery(this).data('placeholder');
+                }
+            });
+        }
+    });
+</script>
 @endsection
