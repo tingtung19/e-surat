@@ -15,7 +15,7 @@ Route::post('logout', [AuthController::class, 'destroy'])->middleware('auth')->n
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::resource('letters', LetterController::class)->only(['index', 'create', 'store', 'show']);
+    Route::resource('letters', LetterController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
     Route::post('letters/{letter}/comments', [LetterController::class, 'comment'])->name('letters.comments.store');
     Route::post('letters/{letter}/dispositions', [LetterController::class, 'dispose'])->name('letters.dispositions.store');
     Route::post('letters/{letter}/cc', [LetterController::class, 'cc'])->name('letters.cc.store');

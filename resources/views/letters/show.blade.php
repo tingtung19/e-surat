@@ -13,6 +13,9 @@
     </div>
     <div class="detail-actions">
         <span class="badge badge-blue">{{ $letter->number ?? 'Belum bernomor' }}</span>
+        @if($letter->created_by === auth()->id() && $letter->status === 'draft')
+            <a class="btn secondary" href="{{ route('letters.edit', $letter) }}"><ion-icon name="create-outline"></ion-icon> Edit draft</a>
+        @endif
         @if($letter->created_by === auth()->id() && ! $letter->opened_at && ! in_array($letter->status, ['cancelled', 'completed', 'closed']))
             <form method="post" action="{{ route('letters.cancel', $letter) }}">@csrf<button class="btn secondary" type="submit"><ion-icon name="close-circle-outline"></ion-icon> Batalkan</button></form>
         @endif

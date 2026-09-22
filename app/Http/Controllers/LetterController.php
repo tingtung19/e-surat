@@ -81,6 +81,57 @@ class LetterController extends Controller
         return redirect()->route('letters.show', $letter)->with('success', 'Surat berhasil disimpan.');
     }
 
+    public function edit(Letter $letter): View
+    {
+        abort_unless($letter->created_by === auth()->id() && $letter->status === 'draft', 403);
+
+        return view('letters.create', [
+            'letter' => $letter,
+            'divisions' => User::where('role', 'divisi')->where('is_active', true)->orderBy('division_name')->get(),
+            'defaultDivision' => User::where('role', 'divisi')->where('is_active', true)->where('division_name', 'Divisi Umum')->first(),
+            'categories' => LetterCategory::with('children')->whereNull('parent_id')->get(),
+        ]);
+    }
+
+    public function update(Request $request, Letter $letter): RedirectResponse
+    {
+        abort_unless($letter->created_by === $request->user()->id && $letter->status === 'draft', 403);
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'type' => ['required', 'in:internal,official,external'],
+            'target_division_id' => ['nullable', 'exists:users,id'],
+            'external_sender' => ['nullable', 'string', 'max:255'],
+            'attachments.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png'],
+        ]);
+        abort_if($data['type'] === 'official' && $request->user()->role !== 'divisi', 403);
+        abort_if($data['type'] === 'external' && ! $request->user()->isAdmin(), 403);
+
+        if ($data['type'] === 'official') {
+            $defaultDivision = User::where('role', 'divisi')->where('is_active', true)->where('division_name', 'Divisi Umum')->first();
+            if (! $defaultDivision) {
+                return back()->withErrors(['target_division_id' => 'Divisi Umum belum tersedia.'])->withInput();
+            }
+            $data['target_division_id'] = $defaultDivision->id;
+        }
+        if ($data['type'] === 'internal' && (! $data['target_division_id'] || ! User::where('role', 'divisi')->where('is_active', true)->whereKey($data['target_division_id'])->exists())) {
+            return back()->withErrors(['target_division_id' => 'Divisi tujuan wajib dipilih untuk surat internal.'])->withInput();
+        }
+
+        $data['status'] = $request->boolean('save_draft') ? 'draft' : ($data['type'] === 'internal' ? 'sent' : 'waiting_verification');
+        $attachments = $request->file('attachments', []);
+        DB::transaction(function () use ($data, $attachments, $letter, $request): void {
+            $letter->update($data);
+            LetterHistory::create(['letter_id' => $letter->id, 'user_id' => $request->user()->id, 'action' => 'updated', 'description' => 'Draft diperbarui dengan status '.$letter->status, 'occurred_at' => now()]);
+            foreach ($attachments as $attachment) {
+                $path = $attachment->store('letters');
+                $letter->attachments()->create(['file_name' => $attachment->getClientOriginalName(), 'file_path' => $path, 'file_size' => $attachment->getSize(), 'mime_type' => $attachment->getMimeType()]);
+            }
+        });
+
+        return redirect()->route('letters.show', $letter)->with('success', $request->boolean('save_draft') ? 'Draft berhasil diperbarui.' : 'Draft berhasil dikirim.');
+    }
+
     public function show(Letter $letter): View
     {
         abort_unless($this->accessibleLetters()->whereKey($letter->id)->exists(), 403);

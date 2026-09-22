@@ -85,6 +85,34 @@ class ExampleTest extends TestCase
             ->assertSee($creator->email);
     }
 
+    public function test_creator_can_edit_and_submit_a_draft(): void
+    {
+        $creator = User::factory()->create(['role' => 'divisi', 'division_name' => 'Divisi Umum']);
+        $draft = Letter::factory()->create([
+            'title' => 'Draft lama',
+            'description' => 'Isi lama',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'sender_division_id' => $creator->id,
+            'status' => 'draft',
+        ]);
+
+        $this->actingAs($creator)->get(route('letters.edit', $draft))->assertOk()->assertSee('Draft lama');
+        $this->actingAs($creator)->put(route('letters.update', $draft), [
+            'title' => 'Draft diperbarui',
+            'description' => 'Isi terbaru',
+            'type' => 'official',
+            'target_division_id' => $creator->id,
+        ])->assertRedirect(route('letters.show', $draft));
+
+        $this->assertDatabaseHas('letters', [
+            'id' => $draft->id,
+            'title' => 'Draft diperbarui',
+            'description' => 'Isi terbaru',
+            'status' => 'waiting_verification',
+        ]);
+    }
+
     public function test_director_can_send_cc_to_multiple_divisions_and_reject_inactive_users(): void
     {
         $director = User::factory()->create(['role' => 'direktur']);
