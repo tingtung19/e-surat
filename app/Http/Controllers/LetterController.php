@@ -22,7 +22,7 @@ class LetterController extends Controller
     {
         $query = $this->accessibleLetters()->with('senderDivision');
 
-        if ($request->expectsJson()) {
+        if ($request->expectsJson() || $request->has('draw')) {
             $draw = (int) $request->input('draw', 1);
             $total = (clone $query)->count();
             $search = trim((string) $request->input('search.value', ''));
@@ -35,7 +35,7 @@ class LetterController extends Controller
                 });
             }
             $filtered = (clone $query)->count();
-            $columns = ['title', 'type', 'status', 'created_at'];
+            $columns = ['title', 'type', 'status', 'sender_division_id', 'created_at'];
             $orderColumn = $columns[(int) $request->input('order.0.column', 3)] ?? 'created_at';
             $direction = $request->input('order.0.dir') === 'asc' ? 'asc' : 'desc';
             $letters = $query->orderBy($orderColumn, $direction)

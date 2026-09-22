@@ -131,6 +131,26 @@ class ExampleTest extends TestCase
             ->assertJsonPath('data.0.unread', false);
     }
 
+    public function test_datatables_request_without_json_header_returns_json(): void
+    {
+        $director = User::factory()->create(['role' => 'direktur']);
+        $creator = User::factory()->create(['role' => 'divisi']);
+        Letter::factory()->create([
+            'title' => 'Surat browser request',
+            'description' => 'Isi surat',
+            'type' => 'official',
+            'created_by' => $creator->id,
+            'status' => 'sent',
+            'verified_at' => now(),
+        ]);
+
+        $this->actingAs($director)
+            ->get(route('letters.index', ['draw' => 1, 'start' => 0, 'length' => 10]), ['Accept' => 'text/html'])
+            ->assertOk()
+            ->assertHeader('content-type', 'application/json')
+            ->assertJsonStructure(['draw', 'recordsTotal', 'recordsFiltered', 'data']);
+    }
+
     public function test_new_disposition_makes_recipient_letter_unread_again(): void
     {
         $director = User::factory()->create(['role' => 'direktur']);
